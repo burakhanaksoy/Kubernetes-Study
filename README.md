@@ -13,6 +13,7 @@
 [Kubernetes Components](#k8s-components)
 [Kubernetes Architecture](#k8s-architecture)
 [Minikube and Kubectl](#k8s-minikube-kubectl)
+[Main Kubectl Commands](#kubectl-commands)
 
  
  <p id="what-is-kubernetes">
@@ -330,3 +331,114 @@ Nodes are one of the most important components in K8s architecture since they ru
  <img width="600" alt="Screen Shot 2021-06-27 at 7 30 55 PM" src="https://user-images.githubusercontent.com/31994778/123552306-3af64000-d77e-11eb-89fb-af89065d055c.png">
  </p>
  
+ ---
+ 
+ <h3>Creating and Starting a Cluster</h3>
+ 
+ <h4>Start a Cluster</h4>
+ 
+ `minikube start --vm-driver=hyperkit`
+ 
+ Here, hyperkit is a hypervisor, other alternatives can be used as well.
+ 
+ <p align="center">
+ <img width="550" alt="Screen Shot 2021-06-27 at 9 42 11 PM" src="https://user-images.githubusercontent.com/31994778/123555788-8e718980-d790-11eb-9732-46a57bcb9757.png">
+ </p>
+ 
+ 
+<b>Even if you don't have Docker on your machine, this is still going to work because minikube has `Docker Runtime` pre-installed.</b>
+ 
+ ---
+ 
+ <h4>Get Status of Nodes</h4>
+ 
+`kubectl get nodes`
+
+`minikube status`
+
+<p align="center">
+ <img width="500" alt="Screen Shot 2021-06-27 at 9 43 12 PM" src="https://user-images.githubusercontent.com/31994778/123555812-b5c85680-d790-11eb-8a85-2e06ad85f4c4.png">
+ </p>
+ 
+ ---
+ 
+ <h4>Version</h4>
+ 
+ <p align="center">
+ <img width="500" alt="Screen Shot 2021-06-27 at 9 45 19 PM" src="https://user-images.githubusercontent.com/31994778/123555862-00e26980-d791-11eb-9519-2ef646e5c7ec.png">
+ </p>
+ 
+ ---
+ 
+ <p id="kubectl-commands">
+ <h3>Main Kubectl Commands</h3>
+ <p>
+ 
+ <p align="center">
+  <img width="550" alt="Screen Shot 2021-06-27 at 9 47 38 PM" src="https://user-images.githubusercontent.com/31994778/123555927-5585e480-d791-11eb-9db2-773040f28fbe.png">
+  </p>
+  
+  
+  <h4>Get Pods</h4>
+  
+  `kubectl get pod`
+  
+<p align="center">
+<img width="550" alt="Screen Shot 2021-06-27 at 9 56 32 PM" src="https://user-images.githubusercontent.com/31994778/123556217-96cac400-d792-11eb-94ed-6b1583a119e4.png">
+ </p>
+  
+  ---
+  
+  <h4>Get Services</h4>
+  
+  `kubectl get services`
+  
+  <p align="center">
+ <img width="550" alt="Screen Shot 2021-06-27 at 9 51 05 PM" src="https://user-images.githubusercontent.com/31994778/123556039-cb8a4b80-d791-11eb-8ebc-c95584dc9bc9.png">
+ </p>
+  
+  ---
+  
+  <h4>Create Components</h4>
+  
+  `kubectl create ..`
+  
+  `kubectl create deployment nginx-depl --image=nginx`
+  
+  creates deployment of nginx using its image on DockerHub.
+  
+   <p align="center">
+<img width="550" alt="Screen Shot 2021-06-27 at 9 55 15 PM" src="https://user-images.githubusercontent.com/31994778/123556180-6551f880-d792-11eb-9cbd-8ad6d6a08854.png">
+ </p>
+ 
+- <b>replicaset manages the replicas of a pods.</b>
+- <b>Deployment is a blueprint for creating pods.</b>
+
+
+<p align="center">
+<img width="550" alt="Screen Shot 2021-06-27 at 10 01 52 PM" src="https://user-images.githubusercontent.com/31994778/123556332-5750a780-d793-11eb-92f6-8bd8e2a5b439.png">
+ </p>
+ 
+ ---
+ 
+ <h4>Changing Deployment with kubectl edit</h4>
+ 
+ `kubectl edit deployment <deployment-name>`
+ 
+ <p align="center">
+ <img width="500" alt="Screen Shot 2021-06-27 at 10 07 22 PM" src="https://user-images.githubusercontent.com/31994778/123556467-14db9a80-d794-11eb-9545-63551de30b88.png">
+ </p>
+ 
+ Navigates us to configuration file, and we can change it however we want. For example, I want to change the image version of the pod, so I make it nginx:1.16. The only thing I have to do is change it and save it. The rest is K8s magic.
+ 
+ <p align="center">
+ <img width="550" alt="Screen Shot 2021-06-27 at 10 09 30 PM" src="https://user-images.githubusercontent.com/31994778/123556549-77cd3180-d794-11eb-8452-d48ca0d398cd.png">
+ </p>
+ 
+ As you can see here, K8s is automatically creating another pod for the nginx:1.16 container. Very convenient and fast.
+ 
+ Also, note that a new replicaset is created.
+ 
+ <p align="center">
+ <img width="550" alt="Screen Shot 2021-06-27 at 10 14 45 PM" src="https://user-images.githubusercontent.com/31994778/123556662-21acbe00-d795-11eb-886d-4a340b1bb596.png">
+<p>
