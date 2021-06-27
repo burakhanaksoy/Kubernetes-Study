@@ -4,6 +4,9 @@
 <img width="400" height="200" src="https://user-images.githubusercontent.com/31994778/123542315-b7bef500-d751-11eb-8bf6-dd6c87a7fabb.png">
 </p>
 
+---
+
+
 <b>Table Of Contents</b> |
 ------------ | 
 [What is Kubernetes?](#what-is-kubernetes)
@@ -44,6 +47,8 @@ Amongst switching from `monolithic` architectures to `microservices`, applicatio
  - <b>Scalability</b>: Kubernetes helps containers to load faster which increases the response rate.
  - <b>Disaster Recovery</b>: When backend infrastructure fails, i.e., loses data, K8s helps it backup and restore the data.
 
+---
+
 <p id="k8s-components">
 <h2>Kubernetes Components</h2>
 </p>
@@ -57,6 +62,8 @@ Amongst switching from `monolithic` architectures to `microservices`, applicatio
 <h3>Node</h3>
 
 Node in kubernetes is a server. It's either on a physical machine or a VM. `Nodes` contain `pods`. Each node in k8s has necessary resources to run pods.
+
+---
 
 <h3>Pod</h3>
 
@@ -83,6 +90,8 @@ What this means is that a pod creaters a running environment, another layer, ove
   
   When a pod dies out, kubernetes replaces it with another one, however, the IP address of the dead port changes on restart. This is bad since other pod won't be aware of the new IP address. To solve it, we have another component called `Service`.
   
+  ---
+
   <h3>Service</h3>
   
   <b><i>"Service is a component that provides a permanent IP address with pods. So each `pod` has its own `service`. However, Service and Pod are not the same thing so we should think Service as a gateway to a Pod that helps a Pod to obtain a permanent IP address. "</b></i>
@@ -104,6 +113,8 @@ What this means is that a pod creaters a running environment, another layer, ove
 <p align="center">
   <img width="350" height="300" alt="Screen Shot 2021-06-27 at 3 43 07 PM" src="https://user-images.githubusercontent.com/31994778/123544955-71bc5e00-d75e-11eb-95c7-922fd129880f.png">
   </p>
+  
+  ---
   
   <h3>ConfigMap</h3>
   
@@ -145,6 +156,7 @@ Thanks to `ConfigMap`, we can easily solve this problem without having to do the
 
 In other words, <b>A ConfigMap allows you to decouple environment-specific configuration from your container images, so that your applications are easily portable.</b>
 
+---
 
 <h3>Secret</h3>
 
@@ -156,6 +168,8 @@ In other words, <b>A ConfigMap allows you to decouple environment-specific confi
 <img width="550" alt="Screen Shot 2021-06-27 at 4 40 02 PM" src="https://user-images.githubusercontent.com/31994778/123546691-5d7c5f00-d766-11eb-93ca-9f6d720dc0d0.png">
   </p>
   
+  ---
+
   <h3>Volumes</h3>
   
   By default, Kubernetes pods are like Docker containers, in that they do not preserve data when they are restarted. Volumes in k8s, help us out in this field.
@@ -165,6 +179,8 @@ In other words, <b>A ConfigMap allows you to decouple environment-specific confi
   <p align="center">
   <img width="550" alt="Screen Shot 2021-06-27 at 4 46 18 PM" src="https://user-images.githubusercontent.com/31994778/123546944-6883bf00-d767-11eb-8a87-008cb7915283.png">
   </p>
+  
+  ---
   
   <h3>Deployment & Stateful Sets</h3>
   
