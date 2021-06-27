@@ -12,6 +12,7 @@
 [What is Kubernetes?](#what-is-kubernetes)
 [Kubernetes Components](#k8s-components)
 [Kubernetes Architecture](#k8s-architecture)
+[Minikube and Kubectl](#k8s-minikube-kubectl)
 
  
  <p id="what-is-kubernetes">
@@ -227,6 +228,105 @@ In other words, <b>A ConfigMap allows you to decouple environment-specific confi
   <img width="250" height="350" alt="Screen Shot 2021-06-27 at 4 55 47 PM" src="https://user-images.githubusercontent.com/31994778/123547205-8aca0c80-d768-11eb-973e-dde70a0e14b7.png">
 </p>
 
+---
+
 <p id="k8s-architecture">
 <h2>Kubernetes Architecture</h2>
 </p>
+
+<h3>Node Processes</h3>
+
+Nodes are one of the most important components in K8s architecture since they run the pods inside them. This is one of the reasons why they are called `Worker Nodes`.
+
+<p align="center">
+ <img width="550" alt="networking-overview" src="https://user-images.githubusercontent.com/31994778/123550396-e77ff400-d775-11eb-898d-70112a170aaa.png"> 
+ </p>
+
+<p align="center">
+ Nodes are cluster servers that do the actual work
+ </p>
+ 
+ Every node must have at least 3 processes:
+ 
+ - Container Runtime: Because pods have containers running inside, `Container Runtime` should be installed on every node.
+ - Kubelet: Interacts with both the container and the node. Kubelet starts a pod with a container inside. Also does resource assignments.(CPU, RAM, Storage)
+ - Kube Proxy: Forwards requests in an intelligent manner to avoid network overhead.
+
+<p align="center">
+ <img width="350" height="300" alt="Screen Shot 2021-06-27 at 6 37 33 PM" src="https://user-images.githubusercontent.com/31994778/123550567-cec40e00-d776-11eb-82db-8743e1a11325.png">
+ </p>
+ 
+ <p align="center">
+ Kube Proxy forwarding a request to the most logical pod to prevent network overhead
+ </p>
+ 
+ ---
+
+<h3>Master Processes</h3>
+
+<b><i>Master Nodes are responsible from controlling the state of worker nodes, and have completely different processes running inside.</b></i>
+
+<p align="center">
+ <img width="550" alt="Screen Shot 2021-06-27 at 6 37 33 PM" src="https://user-images.githubusercontent.com/31994778/123550733-a852a280-d777-11eb-869b-515e5a2e9757.png">
+</p>
+
+1- <b>API Server</b>: Acts as a gateway between k8s cluster and control plane. k8s operator(this is you) observes the state of cluster and pods on frontend side with the information provided by the API Server. In other words, it's the gateway for the cluster. This means that when you want to schedule new pods, deploy new applications, create new service or any other components, you need to talk to the API server on the master node and the API Server will validate your request and if everything's fine it'll forward your request to other processes.
+
+<p align="center">
+ <img width="264" alt="Screen Shot 2021-06-27 at 6 59 13 PM" src="https://user-images.githubusercontent.com/31994778/123551288-d0430580-d779-11eb-93eb-9aa806e5e5d9.png">
+ </p>
+
+---
+
+2- <b>Scheduler</b>: Responsible for `intelligently` selecting a node to start a requested pod. It selects the node by looking at many things, such as how much resource available on the node and etc.
+
+<p align="center">
+ <img width="286" alt="Screen Shot 2021-06-27 at 7 02 10 PM" src="https://user-images.githubusercontent.com/31994778/123551398-34fe6000-d77a-11eb-8a12-9c4aa0fda8a6.png">
+ </p>
+ 
+ <b>Scheduler only decides which node that the pod is scheduled to. Kubelet is the one who starts the pod.</b>
+ 
+ ---
+ 
+ 3- <b>Controller Manager</b>: If happens, detects the dead pods on any node and reschedules those nodes as soon as possible.
+ 
+ In other words, watches for state changes in the cluster, i.e., pods crashing and etc., and tries to recover the state. To do that it talks to the scheduler and scheduler does its thing.
+ 
+ 
+<p align="center">
+<img width="272" alt="Screen Shot 2021-06-27 at 7 08 49 PM" src="https://user-images.githubusercontent.com/31994778/123551581-22d0f180-d77b-11eb-8f5f-7b3b7b98d959.png">
+ </p>
+ 
+ ---
+ 
+ 4- <b>etcd</b>: etcd is the key-value store that stores the data regarding the cluster's state. We can think of it as the `Cluster brain`. Every change inside the cluster is persisted into this store and all of the processes we mentioned above works because of the data inside etcd. 
+ 
+ <b>Application data is not stored in etcd.</b>
+ 
+ <b>There could be multiple master nodes</b>
+ 
+ <p align="center">
+<img width="500" alt="Screen Shot 2021-06-27 at 7 18 27 PM" src="https://user-images.githubusercontent.com/31994778/123551920-8f002500-d77c-11eb-81a5-0a2921d15add.png">
+ </p>
+
+<p id="k8s-minikube-kubectl">
+ <h2>Minikube and Kubectl</h2>
+ </p>
+ 
+ <b><i>"Minikube is a 1 Node k8s cluster to be used for testing purposes."</b></i>
+ 
+ <p align="center">
+ <img width="450" height="377.08" alt="Screen Shot 2021-06-27 at 7 25 28 PM" src="https://user-images.githubusercontent.com/31994778/123552169-92e07700-d77d-11eb-89d8-3def555ceef3.png">
+ <img width="450" alt="Screen Shot 2021-06-27 at 7 25 41 PM" src="https://user-images.githubusercontent.com/31994778/123552164-8bb96900-d77d-11eb-81da-b6e51cdcfd32.png">
+ </p>
+ 
+ ---
+ 
+ <h3>Kubectl</h3>
+ 
+ <b><i>"Kubectl is a command line tool for K8s cluster."</b></i>
+ 
+  <p align="center">
+ <img width="600" alt="Screen Shot 2021-06-27 at 7 30 55 PM" src="https://user-images.githubusercontent.com/31994778/123552306-3af64000-d77e-11eb-89fb-af89065d055c.png">
+ </p>
+ 
