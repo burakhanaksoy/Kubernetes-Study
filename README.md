@@ -951,6 +951,12 @@ type: LoadBalancer
  
  We ran `minikube service mongo-express-service` to get an external IP address for mongo-express-service to connect to.
  
+ Schematic is as follows:
+ 
+ <p align="center">
+ <img width="350" height="400" alt="Screen Shot 2021-06-28 at 10 56 31 PM" src="https://user-images.githubusercontent.com/31994778/123696276-3c019d00-d864-11eb-9b9b-28756a199a2b.png">
+ </p>
+ 
  ---
  
  
