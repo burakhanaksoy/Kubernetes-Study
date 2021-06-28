@@ -14,6 +14,7 @@
 [Kubernetes Architecture](#k8s-architecture)
 [Minikube and Kubectl](#k8s-minikube-kubectl)
 [Main Kubectl Commands](#kubectl-commands)
+[Configuration File Syntax](#conf-file-syntax)
 
  
  <p id="what-is-kubernetes">
@@ -560,7 +561,108 @@ here,
 - under metadata, `name: nginx-deployment` is the name of the deployment.
 - under spec, `replicas: 1` is how many pod replicas we want to create.
 - template and spec are the blueprint of the pods.
+- kind: Deployment specifies what we want to create with this .yaml file.
+
+<b>This means that "I want a pod with a single replica. This pod will run a container with name: nginx, image: nginx: 1.6 and bind that to port 80.</b>
 
 <p align="center">
  <img width="500" alt="Screen Shot 2021-06-28 at 9 50 02 AM" src="https://user-images.githubusercontent.com/31994778/123592938-95cb7e00-d7f6-11eb-9c41-e31dee946cd9.png">
  </p>
+ 
+(Later on, I changed nginx: 1.6 to nginx: latest due to some error...)
+
+Let's apply the configuration..
+
+`kubectl apply -f nginx-deployment.yaml`
+
+Results in:
+
+```bash
+⬢  front  master ⦿ kubectl apply -f nginx-deployment.yaml
+deployment.apps/nginx-deployment created
+
+⬢  front  master ⦿ kubectl get pod
+NAME                                READY   STATUS    RESTARTS   AGE
+mongo-depl-5fd6b7d4b4-gpxpt         1/1     Running   0          134m
+nginx-deployment-75b69bd684-mm6lw   1/1     Running   0          2m2s
+
+⬢  front  master ⦿ kubectl describe pod nginx-deployment-75b69bd684-mm6lw
+Name:         nginx-deployment-75b69bd684-mm6lw
+Namespace:    default
+Priority:     0
+Node:         minikube/192.168.64.2
+Start Time:   Mon, 28 Jun 2021 11:43:03 +0300
+Labels:       app=nginx
+              pod-template-hash=75b69bd684
+Annotations:  <none>
+Status:       Running
+IP:           172.17.0.5
+IPs:
+  IP:           172.17.0.5
+Controlled By:  ReplicaSet/nginx-deployment-75b69bd684
+Containers:
+  nginx:
+    Container ID:   docker://97fc037029179e168b2a478f438b767c0d4ab37cc1fc5dd20e5c02c64eaa4b45
+    Image:          nginx:latest
+    Image ID:       docker-pullable://nginx@sha256:47ae43cdfc7064d28800bc42e79a429540c7c80168e8c8952778c0d5af1c09db
+    Port:           80/TCP
+    Host Port:      0/TCP
+    State:          Running
+      Started:      Mon, 28 Jun 2021 11:43:04 +0300
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-gkcb9 (ro)
+Conditions:
+  Type              Status
+  Initialized       True 
+  Ready             True 
+  ContainersReady   True 
+  PodScheduled      True 
+Volumes:
+  default-token-gkcb9:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  default-token-gkcb9
+    Optional:    false
+QoS Class:       BestEffort
+Node-Selectors:  <none>
+Tolerations:     node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                 node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  42s   default-scheduler  Successfully assigned default/nginx-deployment-75b69bd684-mm6lw to minikube
+  Normal  Pulled     41s   kubelet            Container image "nginx:latest" already present on machine
+  Normal  Created    41s   kubelet            Created container nginx
+  Normal  Started    41s   kubelet            Started container nginx
+```
+
+If you want to update, say replica to 2, then all you have to do is 
+
+`vim nginx-deployment.yaml` and change the necessary field.
+
+<p align="center">
+ <img width="357" alt="Screen Shot 2021-06-28 at 11 49 51 AM" src="https://user-images.githubusercontent.com/31994778/123608056-18f4d000-d807-11eb-9fd2-8b5a61fdf76d.png">
+ </p>
+
+and then `kubectl apply nginx-deployment.yaml` again,
+
+```bash
+⬢  front  master ⦿ vim nginx-deployment.yaml 
+⬢  front  master ⦿ kubectl apply -f nginx-deployment.yaml                
+deployment.apps/nginx-deployment configured
+⬢  front  master ⦿ kubectl get pod
+NAME                                READY   STATUS    RESTARTS   AGE
+nginx-deployment-75b69bd684-dlwfq   1/1     Running   0          12s
+nginx-deployment-75b69bd684-mm6lw   1/1     Running   0          8m26s
+```
+
+As you can see, we have two replicas now!
+
+<b>You can use kubectl commands with any other component, such as `services`, `volumes`, just like we did it with `deployment`.</b>
+
+<p id="conf-file-syntax">
+<h2>Configuration File Syntax</h2>
+</p>
+
