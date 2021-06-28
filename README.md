@@ -442,3 +442,125 @@ Nodes are one of the most important components in K8s architecture since they ru
  <p align="center">
  <img width="550" alt="Screen Shot 2021-06-27 at 10 14 45 PM" src="https://user-images.githubusercontent.com/31994778/123556662-21acbe00-d795-11eb-886d-4a340b1bb596.png">
 <p>
+
+ ---
+ 
+ <h3>Debugging Pods</h3>
+ 
+ 1- Get the pod name via `kubectl get pod`
+ 
+ 2- run `kubectl logs [pod name]`
+ 
+ 3- Voila !
+ 
+ <p align="center"> 
+ <img width="550" alt="Screen Shot 2021-06-28 at 9 01 17 AM" src="https://user-images.githubusercontent.com/31994778/123587827-86950200-d7ef-11eb-98ed-03e81a6636e5.png">
+</p>
+
+4- If you want to see more information about the pod, run `kubectl describe pod [pod name]`
+
+<p align="center">
+ <img width="550" alt="Screen Shot 2021-06-28 at 9 04 22 AM" src="https://user-images.githubusercontent.com/31994778/123588052-dd024080-d7ef-11eb-86e8-a809369d3572.png">
+ </p>
+ 
+ This also will give us the lifecycle information of the pod.
+ 
+ ```bash
+ Events:
+  Type    Reason     Age    From               Message
+  ----    ------     ----   ----               -------
+  Normal  Scheduled  9h     default-scheduler  Successfully assigned default/mongo-depl-5fd6b7d4b4-hnkg9 to minikube
+  Normal  Pulling    5m39s  kubelet            Pulling image "mongo"
+  Normal  Pulled     3m10s  kubelet            Successfully pulled image "mongo" in 2m28.975403524s
+  Normal  Created    3m8s   kubelet            Created container mongo
+  Normal  Started    3m8s   kubelet            Started container mongo
+```
+
+5- We can also get inside the pod terminal via `kubectl exec -it [pod name] -- bin/bash`
+
+<p align="center">
+<img width="550" alt="Screen Shot 2021-06-28 at 9 13 44 AM" src="https://user-images.githubusercontent.com/31994778/123588938-2ef79600-d7f1-11eb-8eb9-68aea47da80c.png">
+ </p>
+
+with this, we can get inside the pod container and do some testing and debugging, very useful.
+
+---
+
+<h3>Delete Deployment</h3>
+
+`kubectl delete deployment [name]`
+
+1- run `kubectl get deployment` to check out deployments
+
+2- run `kubectl delete deployment [name]` to delete
+
+Results in:
+ 
+ ```bash
+ ⬢  front  master ⦾ kubectl get deployment
+NAME         READY   UP-TO-DATE   AVAILABLE   AGE
+mongo-depl   1/1     1            1           10h
+nginx-depl   1/1     1            1           11h
+⬢  front  master ⦾ kubectl delete deployment mongo-depl
+deployment.apps "mongo-depl" deleted
+⬢  front  master ⦾ kubectl get pod
+NAME                          READY   STATUS        RESTARTS   AGE
+mongo-depl-5fd6b7d4b4-hnkg9   0/1     Terminating   0          10h
+nginx-depl-7fc44fc5d4-wvv6h   1/1     Running       0          11h
+⬢  front  master ⦾ 
+
+ ```
+ 
+ <b>CRUD operations is done at `Deployment` level, and everything underneath follows automatically.</b>
+ 
+ ---
+  
+<h3>Creating a Configuration File</h3>
+
+As we have seen before, creating a deployment manually is a bit laborious. It has the following form:
+```
+kubectl create deployment mongo-depl --image=mongo option1 option2 option3
+```
+
+Imagine doing this manually everytime. Would be very tedious, especially if you're working with multiple pods.
+
+Instead, we can create a config-file and use it to create deployments with `kubectl apply -f [filename]`
+
+Let's create a configuration file:
+
+1- `touch nginx-deployment.yaml`
+
+2- 
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.6
+          ports:
+            - containerPort: 80
+```
+
+here,
+
+- under metadata, `name: nginx-deployment` is the name of the deployment.
+- under spec, `replicas: 1` is how many pod replicas we want to create.
+- template and spec are the blueprint of the pods.
+
+<p align="center">
+ <img width="500" alt="Screen Shot 2021-06-28 at 9 50 02 AM" src="https://user-images.githubusercontent.com/31994778/123592938-95cb7e00-d7f6-11eb-9c41-e31dee946cd9.png">
+ </p>
