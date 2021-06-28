@@ -666,3 +666,104 @@ As you can see, we have two replicas now!
 <h2>Configuration File Syntax</h2>
 </p>
 
+<b><i>"Main tool for creating and configuring components in the Kubernetes cluster."</b></i>
+
+<h3>3 Parts of K8s Configuration File</h3>
+
+Every configuration file in K8s has 3 parts.
+
+1- <b>Metadata</b>
+
+2- <b>Specification</b>
+
+3- <b>Status</b>
+
+---
+
+<h3>Format</h3>
+
+Format of K8s configuration file is .yaml, which is:
+
+- Very strict about indentation.
+- Easy to read.
+- You can use online Yaml validators, especially if the configuration file is pretty large.
+- Store the config file with your code. 
+
+<h3>Connecting Services to Deployments</h3>
+
+<b><i>"Services act as a gateway to pods, hence, we need to configure deployments and services accordingly."</b></i>
+
+Configuration file for deployment:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:latest
+          ports:
+            - containerPort: 8080
+```
+
+Configuration file for service:
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+```
+
+Here, `containerPort` should be the same as `targetPort` of the service. This is so because a service needs to forward request to the pod, which runs the container inside. If the service doesn't know the container port, then it can't forward requests to the pod.
+
+Also, `port: 80` of the service means that other pods, such as a database pod will talk to the service through port 80.
+
+<p align="center">
+ <img width="351" height="426" alt="Screen Shot 2021-06-28 at 3 37 18 PM" src="https://user-images.githubusercontent.com/31994778/123637730-04c0cb00-d827-11eb-9d7b-c0b81badd744.png">
+ <img width="320" height="426" alt="Screen Shot 2021-06-28 at 3 37 36 PM" src="https://user-images.githubusercontent.com/31994778/123637718-fecaea00-d826-11eb-96f7-b95b95db5baf.png">
+ </p>
+
+<p align="center">
+<img width="800" alt="Screen Shot 2021-06-28 at 3 45 19 PM" src="https://user-images.githubusercontent.com/31994778/123639050-7ea58400-d828-11eb-9fa7-c736ba2ab61d.png">
+</p>
+
+---
+
+<h3>Deleting Configuration Files</h3>
+
+If you delete a configuration file through kubectl, everything underneath is gone.
+
+```bash
+⬢  Azure  master ⦿ kubectl delete -f nginx-deployment.yaml 
+deployment.apps "nginx-deployment" deleted
+⬢  Azure  master ⦿ kubectl delete -f nginx-service.yaml 
+service "nginx-service" deleted
+⬢  Azure  master ⦿ kubectl get deployment
+No resources found in default namespace.
+⬢  Azure  master ⦿ kubectl get pod
+No resources found in default namespace.
+⬢  Azure  master ⦿ kubectl get service
+NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   18h
+```
