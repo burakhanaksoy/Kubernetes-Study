@@ -15,6 +15,7 @@
 [Minikube and Kubectl](#k8s-minikube-kubectl)
 [Main Kubectl Commands](#kubectl-commands)
 [Configuration File Syntax](#conf-file-syntax)
+[Configuration File Demo](#conf-file-demo)
 
  
  <p id="what-is-kubernetes">
@@ -767,3 +768,191 @@ No resources found in default namespace.
 NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
 kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   18h
 ```
+
+---
+
+<p id="conf-file-demo">
+<h2>Configuration File Demo</h2>
+</p>
+
+We'll build a K8s cluster with mongodb and mongo-express deployments.
+
+1- We need to prepare both mongodb and mongo-express configuration files.
+
+Starting with mongodb:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb-deployment
+  labels:
+    app: mongodb
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+        - name: mongodb
+          image: mongo:latest
+          ports:
+            - containerPort: 27017
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: 
+                  key: 
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: 
+                  key: 
+```
+
+Here, as you may have noticed, we did not fill `name` and `key` fields yet. We need a `Secret` file first. Remember that `Secret` file contains sensitive data, such as username and password.
+
+2 - Create `mongodb-secret.yaml` file
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mongodb-secret
+type: Opaque
+data:
+  username: YWRtaW4=
+  password: cGFzc3dvcmQ=
+```
+
+You may wonder how we got username and password as `YWRtaW4=` and `cGFzc3dvcmQ=`..
+
+I used the following command to encode username and password values to Base64.
+
+```
+⬢  Azure  master ⦿ echo -n 'admin' | base64
+YWRtaW4=
+
+⬢  Azure  master ⦿ echo -n 'password' | base64
+cGFzc3dvcmQ=
+```
+
+3- run `kubectl apply -f mongodb-secret.yaml` in order to create secret component.
+
+<b>Secret should be created prior to deployment file! Otherwise deployment file won't see the secret file and cannot retrieve username, password data.</b>
+
+4- edit your `mongodb-deployment.yaml` file `env` part as follows
+
+```yaml
+env:
+  - name: MONGO_INITDB_ROOT_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: mongodb-secret
+        key: username
+  - name: MONGO_INITDB_ROOT_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: mongodb-secret
+        key: password
+```
+
+5- run `kubectl apply -f mongodb-deployment.yaml`
+
+6- Test!
+
+```yaml
+⬢  Azure  master ⦿ kubectl get deployment
+NAME                 READY   UP-TO-DATE   AVAILABLE   AGE
+mongodb-deployment   2/2     2            2           6s
+
+⬢  Azure  master ⦿ kubectl get all       
+NAME                                      READY   STATUS    RESTARTS   AGE
+pod/mongodb-deployment-6c4cc48696-7fgjz   1/1     Running   0          24s
+pod/mongodb-deployment-6c4cc48696-8j547   1/1     Running   0          24s
+
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   22h
+
+NAME                                 READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/mongodb-deployment   2/2     2            2           24s
+
+NAME                                            DESIRED   CURRENT   READY   AGE
+replicaset.apps/mongodb-deployment-6c4cc48696   2         2         2       24s
+
+⬢  Azure  master ⦿ kubectl get secret    
+NAME                  TYPE                                  DATA   AGE
+default-token-gkcb9   kubernetes.io/service-account-token   3      22h
+mongodb-secret        Opaque                                2      14m
+
+```
+
+As you can see, everything is working fine and dandy.
+
+Now, let's create an internal service so that other pods can talk to mongodb pod.
+
+<b>In yaml, you can put multiple documents in a single file with `---`</b>
+
+We can put Service and Deployment file in the same configuration file because they belong together.
+
+<p align="center">
+ <img width="550" alt="Screen Shot 2021-06-28 at 9 17 30 PM" src="https://user-images.githubusercontent.com/31994778/123684657-68aeb800-d856-11eb-824a-fdb30d9bb721.png">
+ </p>
+
+
+7- Create a service configuration
+
+```yaml
+⬢  Azure  master ⦿ kubectl apply -f mongodb-deployment.yaml
+deployment.apps/mongodb-deployment unchanged
+service/mongodb-service created
+
+⬢  Azure  master ⦿ kubectl describe service mongodb-service
+Name:              mongodb-service
+Namespace:         default
+Labels:            <none>
+Annotations:       <none>
+Selector:          app=mongodb
+Type:              ClusterIP
+IP:                10.105.106.70
+Port:              <unset>  8081/TCP
+TargetPort:        27017/TCP
+Endpoints:         172.17.0.3:27017,172.17.0.4:27017
+Session Affinity:  None
+Events:            <none>
+```
+
+8- Do the same thing for mongo-express application
+
+I added both files `mongo-express-depl.yaml` and `mongodb-deployment.yaml` to the repo...
+
+Here, `mongo-express-depl.yaml` has 
+
+```yaml
+type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 8081
+      targetPort: 8081
+      nodePort: 30000
+```
+
+<b>type is set to `LoadBalancer` since it is `Ingress`, which acts as a gateway to external requests. And `nodePort` acts as the port which we use to connect mongo-express by using browser, in short, it's the external port.</b>
+
+<p align="center">
+ <img width="600" alt="Screen Shot 2021-06-28 at 10 47 23 PM" src="https://user-images.githubusercontent.com/31994778/123695123-d9f46800-d862-11eb-917e-fd6f4f4f8654.png">
+ </p>
+ 
+ We ran `minikube service mongo-express-service` to get an external IP address for mongo-express-service to connect to.
+ 
+ ---
+ 
+ 
+ 
+ 
