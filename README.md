@@ -16,6 +16,7 @@
 [Main Kubectl Commands](#kubectl-commands)
 [Configuration File Syntax](#conf-file-syntax)
 [Configuration File Demo](#conf-file-demo)
+[K8s Namespaces](#k8s-namespaces)
 
  
  <p id="what-is-kubernetes">
@@ -930,7 +931,7 @@ Events:            <none>
 
 8- Do the same thing for mongo-express application
 
-I added both files `mongo-express-depl.yaml` and `mongodb-deployment.yaml` to the repo...
+I added both files [mongo-express-depl.yaml](https://github.com/burakhanaksoy/Kubernetes-Study/blob/main/mongo-express-depl.yaml) and [mongodb-deployment.yaml](https://github.com/burakhanaksoy/Kubernetes-Study/blob/main/mongodb-deployment.yaml) to the repo...
 
 Here, `mongo-express-depl.yaml` has 
 
@@ -945,11 +946,39 @@ type: LoadBalancer
 
 <b>type is set to `LoadBalancer` since it is `Ingress`, which acts as a gateway to external requests. And `nodePort` acts as the port which we use to connect mongo-express by using browser, in short, it's the external port.</b>
 
+9- Create a configmap so that mongo-express deployment can retrieve database_url.
+
+mongo-configmap.yaml
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mongodb-configmap
+data:
+  database_url: mongodb-service
+```
+
+10- firstly, apply the configmap by `kubectl apply -f mongo-configmap.yaml`.
+
+Then, create both service and deployment components by `kubectl apply -f mongo-express-depl.yaml`.
+
+```bash
+⬢  Azure  master ⦿ kubectl apply -f mongo-configmap.yaml
+configmap/mongodb-configmap created
+⬢  Azure  master ⦿ kubectl apply -f mongo-express-depl.yaml
+deployment.apps/mongo-express created
+```
+
+<p align="center">
+<img width="550" alt="Screen Shot 2021-06-29 at 9 21 48 AM" src="https://user-images.githubusercontent.com/31994778/123747447-a5f96100-d8bb-11eb-9e3e-35997db8bc0e.png">
+ </p>
+
+ We ran `minikube service mongo-express-service` to get an external IP address for mongo-express-service to connect to.
+ 
 <p align="center">
  <img width="600" alt="Screen Shot 2021-06-28 at 10 47 23 PM" src="https://user-images.githubusercontent.com/31994778/123695123-d9f46800-d862-11eb-917e-fd6f4f4f8654.png">
  </p>
- 
- We ran `minikube service mongo-express-service` to get an external IP address for mongo-express-service to connect to.
  
  Schematic is as follows:
  
@@ -957,8 +986,168 @@ type: LoadBalancer
  <img width="350" height="400" alt="Screen Shot 2021-06-28 at 10 56 31 PM" src="https://user-images.githubusercontent.com/31994778/123696276-3c019d00-d864-11eb-9b9b-28756a199a2b.png">
  </p>
  
+ <b>Again, it's important that we apply configmap.yaml before we apply deployment.yaml</b>
+ 
  ---
  
+ <p id="k8s-namespaces">
+ <h2>K8s Namespaces</h2>
+</p>
  
+ <b><i>"We can think of a namespace as a virtual cluster inside a cluster."</b></i>
  
+ using a namespace is not necessary for small, mid scale projects since in this kind of projects, resources inside the cluster can be managed easily, without complexities.
  
+ However, as the projects get larger and more complex, we might have a situation like the following:
+ 
+ <p align="center">
+ <img width="550" alt="Screen Shot 2021-06-29 at 9 41 21 AM" src="https://user-images.githubusercontent.com/31994778/123749503-2de06a80-d8be-11eb-8532-28a75402d7c4.png">
+ </p>
+ 
+ <p align="center">
+ A complex project figure
+ </p>
+ 
+In this case, we better use namespaces. Image running `kubectl get all` with a namespace having least 15 components, multiple configmaps and etc. That would be a mess!
+
+ With using namespaces, we can group related components in their respective namespaces as follows:
+ 
+ <p align="center">
+<img width="550" alt="Screen Shot 2021-06-29 at 9 45 31 AM" src="https://user-images.githubusercontent.com/31994778/123750046-c971db00-d8be-11eb-9aae-3b3d8e94f0d8.png">
+ </p>
+
+<b>Another use case of namespaces is multiple teams using the same cluster.</b>
+
+<p align="center">
+ <img width="600" alt="Screen Shot 2021-06-29 at 9 47 29 AM" src="https://user-images.githubusercontent.com/31994778/123750504-54eb6c00-d8bf-11eb-83f2-42c57228bb19.png">
+ </p>
+ 
+  <p align="center">
+ Teams having a conflict when using a single cluster.
+ </p>
+ 
+ Solution
+
+<p align="center">
+ <img width="600" alt="Screen Shot 2021-06-29 at 9 47 52 AM" src="https://user-images.githubusercontent.com/31994778/123750383-308f8f80-d8bf-11eb-9e13-1789447e456d.png">
+ </p>
+
+<b>Another use case of namespaces is resource sharing in staging and development.</b>
+
+When we have staging and development deployments inside the same cluster, it's better to use them in different namespaces. In this way, they can share the resources inside the cluster, and we do not need to deploy the resources twice for staging and development deployments.
+
+<p align="center">
+ <img width="600" alt="Screen Shot 2021-06-29 at 9 57 26 AM" src="https://user-images.githubusercontent.com/31994778/123751481-76992300-d8c0-11eb-8db4-74e5d131c704.png">
+ </p>
+ 
+ <b>Another use case of namespaces is limiting resource access for different teams.</b>
+ 
+ <p align="center">
+<img width="600" alt="Screen Shot 2021-06-29 at 10 18 30 AM" src="https://user-images.githubusercontent.com/31994778/123754276-620a5a00-d8c3-11eb-8217-db66c87115d4.png">
+
+ </p>
+  
+ <p align="center">
+restricting namespaces for different teams
+ </p>
+ 
+ In this way, we eliminate the possibility of one team interfering accidentally with another team's namespace and resources.
+ 
+ Also, in this way, we can limit CPU, RAM, Storage usage for each team per namespace.
+ 
+  <p align="center">
+<img width="600" alt="Screen Shot 2021-06-29 at 10 21 11 AM" src="https://user-images.githubusercontent.com/31994778/123754614-c3cac400-d8c3-11eb-95ff-ef4a606f738c.png">
+ </p>
+  
+ <p align="center">
+portioning physical resources for different teams
+ </p>
+ 
+ <h3>Namespace Usecase Summary</h3>
+ 
+ - Structuring components
+ - Avoid conflicts between teams
+ - Sharing services between different environments
+ - Access and resource limits on namespaces level
+
+<b>Each namespace should define its own ConfigMap, even if it has the same reference. This is so because one namespace cannot use another namespace's ConfigMap.</b>
+
+<b>Each namespace should define its own Secret, even if it has the same reference. This is so because one namespace cannot use another namespace's Secret.</b>
+
+<b>However, namespaces can share service.</b>
+
+  <p align="center">
+<img width="671" alt="Screen Shot 2021-06-29 at 10 28 36 AM" src="https://user-images.githubusercontent.com/31994778/123755658-cf6aba80-d8c4-11eb-9a93-409ead2c89a4.png">
+ </p>
+  
+ <p align="center">
+ Different namespaces can share Service component
+ </p>
+ 
+ <b>Some components cannot be created in a namespace, they must be global in the cluster. Examples of such components are `volume` and `node`.</b>
+ 
+ ```bash
+ ⬢  Azure  master ⦿ kubectl api-resources --namespaced=false
+NAME                              SHORTNAMES   APIGROUP                       NAMESPACED   KIND
+componentstatuses                 cs                                          false        ComponentStatus
+namespaces                        ns                                          false        Namespace
+nodes                             no                                          false        Node
+persistentvolumes                 pv                                          false        PersistentVolume
+mutatingwebhookconfigurations                  admissionregistration.k8s.io   false        MutatingWebhookConfiguration
+validatingwebhookconfigurations                admissionregistration.k8s.io   false        ValidatingWebhookConfiguration
+customresourcedefinitions         crd,crds     apiextensions.k8s.io           false        CustomResourceDefinition
+apiservices                                    apiregistration.k8s.io         false        APIService
+tokenreviews                                   authentication.k8s.io          false        TokenReview
+selfsubjectaccessreviews                       authorization.k8s.io           false        SelfSubjectAccessReview
+selfsubjectrulesreviews                        authorization.k8s.io           false        SelfSubjectRulesReview
+subjectaccessreviews                           authorization.k8s.io           false        SubjectAccessReview
+certificatesigningrequests        csr          certificates.k8s.io            false        CertificateSigningRequest
+flowschemas                                    flowcontrol.apiserver.k8s.io   false        FlowSchema
+prioritylevelconfigurations                    flowcontrol.apiserver.k8s.io   false        PriorityLevelConfiguration
+ingressclasses                                 networking.k8s.io              false        IngressClass
+runtimeclasses                                 node.k8s.io                    false        RuntimeClass
+podsecuritypolicies               psp          policy                         false        PodSecurityPolicy
+clusterrolebindings                            rbac.authorization.k8s.io      false        ClusterRoleBinding
+clusterroles                                   rbac.authorization.k8s.io      false        ClusterRole
+priorityclasses                   pc           scheduling.k8s.io              false        PriorityClass
+csidrivers                                     storage.k8s.io                 false        CSIDriver
+csinodes                                       storage.k8s.io                 false        CSINode
+storageclasses                    sc           storage.k8s.io                 false        StorageClass
+volumeattachments                              storage.k8s.io                 false        VolumeAttachment
+```
+
+```bash
+⬢  Azure  master ⦿ kubectl api-resources --namespaced=true 
+NAME                        SHORTNAMES   APIGROUP                    NAMESPACED   KIND
+bindings                                                             true         Binding
+configmaps                  cm                                       true         ConfigMap
+endpoints                   ep                                       true         Endpoints
+events                      ev                                       true         Event
+limitranges                 limits                                   true         LimitRange
+persistentvolumeclaims      pvc                                      true         PersistentVolumeClaim
+pods                        po                                       true         Pod
+podtemplates                                                         true         PodTemplate
+replicationcontrollers      rc                                       true         ReplicationController
+resourcequotas              quota                                    true         ResourceQuota
+secrets                                                              true         Secret
+serviceaccounts             sa                                       true         ServiceAccount
+services                    svc                                      true         Service
+controllerrevisions                      apps                        true         ControllerRevision
+daemonsets                  ds           apps                        true         DaemonSet
+deployments                 deploy       apps                        true         Deployment
+replicasets                 rs           apps                        true         ReplicaSet
+statefulsets                sts          apps                        true         StatefulSet
+localsubjectaccessreviews                authorization.k8s.io        true         LocalSubjectAccessReview
+horizontalpodautoscalers    hpa          autoscaling                 true         HorizontalPodAutoscaler
+cronjobs                    cj           batch                       true         CronJob
+jobs                                     batch                       true         Job
+leases                                   coordination.k8s.io         true         Lease
+endpointslices                           discovery.k8s.io            true         EndpointSlice
+events                      ev           events.k8s.io               true         Event
+ingresses                   ing          extensions                  true         Ingress
+ingresses                   ing          networking.k8s.io           true         Ingress
+networkpolicies             netpol       networking.k8s.io           true         NetworkPolicy
+poddisruptionbudgets        pdb          policy                      true         PodDisruptionBudget
+rolebindings                             rbac.authorization.k8s.io   true         RoleBinding
+roles                                    rbac.authorization.k8s.io   true         Role
+```
